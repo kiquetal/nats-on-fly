@@ -1,0 +1,12 @@
+
+[Interface]
+PrivateKey = aHM=
+Address = fdaa02/120
+DNS = fdaa:7:37bb::3
+
+[Peer]
+PublicKey = /4iEnPxiM=
+AllowedIPs = fda
+Endpoint = jnb11820
+PersistentKeepalive = 15
+

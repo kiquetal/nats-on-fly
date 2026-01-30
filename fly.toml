@@ -7,7 +7,7 @@ app = 'nats-server-summer-tree-8296'
 primary_region = 'gru'
 
 [experimental]
-  cmd = ['-js', '-sd', '/data', '-m', '8222']
+  cmd = ['-js', '-sd', '/data', '-m', '8222','-a','::']
 
 [build]
   dockerfile = 'Dockerfile'
@@ -16,12 +16,12 @@ primary_region = 'gru'
   source = 'nats_data'
   destination = '/data'
 
-[[services]]
-  protocol = 'tcp'
-  internal_port = 4222
+#[[services]]
+#  protocol = 'tcp'
+#  internal_port = 4222
 
-  [[services.ports]]
-    port = 4222
+#  [[services.ports]]
+#    port = 4222
 
 [[services]]
   protocol = 'tcp'
