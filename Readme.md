@@ -21,6 +21,9 @@ Follow the prompts to set your app name and region.
 
 NATS JetStream requires persistent storage. Create a Fly Volume:
 
+> [!IMPORTANT]
+> **You must create the app first (Step 1)**. If you receive a `401 Unauthorized` error when creating a volume, it usually means the application name defined in `fly.toml` has not been registered to your Fly account yet, or is already taken by another user.
+
 ```bash
 # Replace 'nats_data' with your preferred volume name if needed
 # Replace 'sjc' with your specific region code (e.g., ams, iad, lhr)

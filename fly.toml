@@ -1,25 +1,37 @@
-app = "nats-server"
-primary_region = "ams"
+# fly.toml app configuration file generated for nats-server-patient-wildflower-1867 on 2026-01-30T14:13:33-03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-[build]
-  dockerfile = "Dockerfile"
-
-[mounts]
-  source = "nats_data"
-  destination = "/data"
+app = 'nats-server-patient-wildflower-1867'
+primary_region = 'gru'
 
 [experimental]
-  cmd = ["-js", "-sd", "/data"]
+  cmd = ['-js', '-sd', '/data']
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[[mounts]]
+  source = 'nats_data'
+  destination = '/data'
 
 [[services]]
-  protocol = "tcp"
+  protocol = 'tcp'
   internal_port = 4222
 
   [[services.ports]]
     port = 4222
-    handlers = []
+
+[[services]]
+  protocol = 'tcp'
+  internal_port = 8222
+
+  [[services.ports]]
+    port = 8222
+    handlers = ['http']
 
 [[vm]]
-  cpu_kind = "shared"
+  memory = '512mb'
   cpus = 1
-  memory_mb = 256
+  memory_mb = 512
