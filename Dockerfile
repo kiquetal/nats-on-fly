@@ -4,4 +4,4 @@ FROM nats:2.10.25-alpine
 EXPOSE 4222 8222 6222
 
 # Default entrypoint is already "nats-server"
-CMD ["-js"]
+CMD ["-js", "-sd", "/data"]
