@@ -1,4 +1,4 @@
-app = "your-app-name-here"
+app = "nats-server"
 primary_region = "ams"
 
 [build]

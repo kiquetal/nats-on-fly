@@ -74,7 +74,18 @@ primary_region = "your-region"
 *   `-js`: Enables JetStream.
 *   `-sd /data`: Sets the store directory to our mounted volume.
 
-## 4. Deploy
+## 4. Understanding the Configuration
+
+It's important to understand how JetStream and data persistence work together:
+
+*   **JetStream Activation**: JetStream is not "on" by default in the base NATS image. It must be explicitly enabled using the `-js` flag.
+*   **Data Persistence**: Even with JetStream enabled, NATS will store data in a temporary directory inside the container by default. To make data survive restarts or redeploys on Fly.io, you must:
+    1.  Create and mount a **Fly Volume** (the `[mounts]` section).
+    2.  Use the **`-sd /data`** flag to tell NATS to use that specific mounted path for its store directory.
+
+Without both the volume mount and the `-sd` flag, your JetStream data will be lost every time the container restarts.
+
+## 5. Deploy
 
 Deploy the application:
 
@@ -82,7 +93,7 @@ Deploy the application:
 fly deploy
 ```
 
-## 5. Future Updates
+## 6. Future Updates
 
 To update the NATS version in the future, simply update the image tag in your `fly.toml` or pass it directly to the deploy command.
 
