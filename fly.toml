@@ -1,13 +1,13 @@
-# fly.toml app configuration file generated for nats-server-patient-wildflower-1867 on 2026-01-30T14:13:33-03:00
+# fly.toml app configuration file generated for nats-server-summer-tree-8296 on 2026-01-30T14:21:18-03:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'nats-server-patient-wildflower-1867'
+app = 'nats-server-summer-tree-8296'
 primary_region = 'gru'
 
 [experimental]
-  cmd = ['-js', '-sd', '/data']
+  cmd = ['-js', '-sd', '/data', '-m', '8222']
 
 [build]
   dockerfile = 'Dockerfile'
@@ -29,7 +29,7 @@ primary_region = 'gru'
 
   [[services.ports]]
     port = 8222
-    handlers = ['http']
+    handlers = ['http','tls']
 
 [[vm]]
   memory = '512mb'
