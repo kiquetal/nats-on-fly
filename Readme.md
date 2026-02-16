@@ -6,6 +6,7 @@ This guide details how to deploy NATS (specifically enabling JetStream with pers
 
 *   [Fly CLI](https://fly.io/docs/hands-on/install-flyctl/) installed.
 *   Logged in via `fly auth login`.
+*   **A dedicated IPv4 address** (required for non-HTTP TCP services like NATS). This costs $2/month.
 
 ## 1. Initialize the App
 
@@ -17,7 +18,18 @@ fly launch --image nats:2.10-alpine --no-deploy
 
 Follow the prompts to set your app name and region.
 
-## 2. Create Persistent Storage
+## 2. Allocate a Dedicated IPv4 Address
+
+NATS uses non-HTTP TCP protocols (port 4222 for client connections), which requires a dedicated IPv4 address on Fly.io. Allocate one for your app:
+
+```bash
+fly ips allocate-v4
+```
+
+> [!NOTE]
+> Dedicated IPv4 addresses cost $2/month. This is required because Fly.io's shared IPv4 addresses only support HTTP/HTTPS traffic.
+
+## 3. Create Persistent Storage
 
 NATS JetStream requires persistent storage. Create a Fly Volume:
 
@@ -30,7 +42,7 @@ NATS JetStream requires persistent storage. Create a Fly Volume:
 fly vol create nats_data --size 1 --region <your-region>
 ```
 
-## 3. Configure `fly.toml`
+## 4. Configure `fly.toml`
 
 Edit the generated `fly.toml` file to mount the volume and pass necessary flags to NATS.
 
@@ -77,7 +89,7 @@ primary_region = "your-region"
 *   `-js`: Enables JetStream.
 *   `-sd /data`: Sets the store directory to our mounted volume.
 
-## 4. Understanding the Configuration
+## 5. Understanding the Configuration
 
 It's important to understand how JetStream and data persistence work together:
 
@@ -88,7 +100,7 @@ It's important to understand how JetStream and data persistence work together:
 
 Without both the volume mount and the `-sd` flag, your JetStream data will be lost every time the container restarts.
 
-## 5. Deploy
+## 6. Deploy
 
 Deploy the application:
 
@@ -96,7 +108,7 @@ Deploy the application:
 fly deploy
 ```
 
-## 6. Future Updates
+## 7. Future Updates
 
 To update the NATS version in the future, simply update the image tag in your `fly.toml` or pass it directly to the deploy command.
 
