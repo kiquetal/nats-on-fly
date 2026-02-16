@@ -1,0 +1,47 @@
+graph TB
+    subgraph "Fly.io Infrastructure"
+        subgraph "NATS Cluster"
+            N1[NATS Server 1<br/>nats-1.internal]
+            N2[NATS Server 2<br/>nats-2.internal]
+            N3[NATS Server 3<br/>nats-3.internal]
+        end
+        
+        subgraph "Application Instances"
+            A1[App Instance 1]
+            A2[App Instance 2]
+            A3[App Instance 3]
+        end
+        
+        subgraph "External Services"
+            EXT[External Client<br/>via Public DNS]
+        end
+    end
+    
+    N1 <-->|Cluster Mesh| N2
+    N2 <-->|Cluster Mesh| N3
+    N3 <-->|Cluster Mesh| N1
+    
+    A1 -->|nats://nats.internal:4222| N1
+    A2 -->|nats://nats.internal:4222| N2
+    A3 -->|nats://nats.internal:4222| N3
+    
+    EXT -->|nats://app-name.fly.dev:4222| N1
+    
+    subgraph "DNS Resolution Patterns"
+        INT[".internal DNS<br/>━━━━━━━━━━<br/>✓ Private 6PN network<br/>✓ Fast, low latency<br/>✓ No egress costs<br/>✓ Auto service discovery"]
+        PUB["Public DNS<br/>━━━━━━━━━━<br/>✓ External access<br/>✓ Internet routing<br/>✗ Higher latency<br/>✗ Egress charges"]
+    end
+    
+    subgraph "Use Cases"
+        UC1["Use .internal DNS when:<br/>━━━━━━━━━━━━━━━━<br/>• App-to-NATS within Fly.io<br/>• Microservices communication<br/>• Event streaming between apps<br/>• Job queues & workers<br/>• Real-time data sync"]
+        
+        UC2["Use Public DNS when:<br/>━━━━━━━━━━━━━━━━<br/>• External clients connecting<br/>• Hybrid cloud setups<br/>• Development from local machine<br/>• Third-party integrations<br/>• Multi-cloud architectures"]
+    end
+    
+    style N1 fill:#4a9eff,stroke:#333,stroke-width:2px,color:#fff
+    style N2 fill:#4a9eff,stroke:#333,stroke-width:2px,color:#fff
+    style N3 fill:#4a9eff,stroke:#333,stroke-width:2px,color:#fff
+    style INT fill:#90EE90,stroke:#333,stroke-width:2px
+    style PUB fill:#FFB6C1,stroke:#333,stroke-width:2px
+    style UC1 fill:#E6F3FF,stroke:#333,stroke-width:2px
+    style UC2 fill:#FFF4E6,stroke:#333,stroke-width:2px
