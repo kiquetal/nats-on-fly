@@ -151,3 +151,11 @@ nats://nats-server-summer-tree-8296.internal:4222
 - No code changes between local and production
 - Test with production-like latency and networking
 - Access all internal services in your Fly.io organization
+
+## Changelog
+
+### 2026-02-16
+- **Cost Optimization**: Released dedicated IPv4 address (169.155.54.47) to save $2/month
+  - NATS server now relies solely on Fly.io's private 6PN network for internal communication
+  - WireGuard and Fly.io apps continue to access NATS via `.internal` DNS
+  - IPv6 public address retained (free) for potential future external access
