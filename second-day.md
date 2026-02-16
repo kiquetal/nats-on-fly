@@ -6,9 +6,19 @@ This guide covers recommended security configurations for production NATS deploy
 
 ## Current State vs. Secure State
 
-![Security Architecture](./security-architecture.png)
+### Current State - No Authentication
 
-See [security-architecture.mmd](./security-architecture.mmd) for the diagram source.
+![Current State](./security-current-state.png)
+
+### Recommended State - With Authentication
+
+![Recommended State](./security-recommended-state.png)
+
+### Security Layers
+
+![Security Layers](./security-layers.png)
+
+See [security-architecture.mmd](./security-architecture.mmd) for the full diagram source.
 
 ## Recommended Security Actions
 
