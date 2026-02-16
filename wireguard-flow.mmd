@@ -1,0 +1,57 @@
+graph TB
+    subgraph "Local Development Machine"
+        DEV[Developer Laptop]
+        APP[Local App/CLI]
+        WG[WireGuard Client]
+    end
+    
+    subgraph "WireGuard Tunnel"
+        TUNNEL[Encrypted VPN Tunnel<br/>6PN Network Access]
+    end
+    
+    subgraph "Fly.io Private Network"
+        DNS[Fly.io DNS Resolver<br/>.internal domains]
+        
+        subgraph "NATS Cluster"
+            N1[nats-1.internal:4222]
+            N2[nats-2.internal:4222]
+            N3[nats-3.internal:4222]
+        end
+    end
+    
+    DEV -->|1. flyctl wireguard up| WG
+    WG -->|2. Establish tunnel| TUNNEL
+    TUNNEL -->|3. Connected to 6PN| DNS
+    
+    APP -->|4. nats pub/sub/request<br/>nats://nats.internal:4222| WG
+    WG --> TUNNEL
+    TUNNEL --> DNS
+    DNS -->|5. Resolve & route| N1
+    DNS -->|5. Resolve & route| N2
+    DNS -->|5. Resolve & route| N3
+    
+    N1 -.->|6. Response| TUNNEL
+    TUNNEL -.->|7. Return data| APP
+    
+    subgraph "Example Commands"
+        CMD["# Publish message<br/>nats pub subject 'hello'<br/><br/># Subscribe to subject<br/>nats sub subject<br/><br/># Request-reply<br/>nats request subject 'data'<br/><br/># Check server info<br/>nats server info"]
+    end
+    
+    subgraph "Without WireGuard"
+        NO_WG["❌ Cannot access .internal<br/>❌ Must use public DNS<br/>❌ Incurs egress costs<br/>❌ Higher latency"]
+    end
+    
+    subgraph "With WireGuard"
+        YES_WG["✓ Access .internal DNS<br/>✓ Private network speed<br/>✓ No egress costs<br/>✓ Production-like testing"]
+    end
+    
+    style DEV fill:#E6F3FF,stroke:#333,stroke-width:2px
+    style WG fill:#4a9eff,stroke:#333,stroke-width:2px,color:#fff
+    style TUNNEL fill:#90EE90,stroke:#333,stroke-width:3px
+    style DNS fill:#FFD700,stroke:#333,stroke-width:2px
+    style N1 fill:#4a9eff,stroke:#333,stroke-width:2px,color:#fff
+    style N2 fill:#4a9eff,stroke:#333,stroke-width:2px,color:#fff
+    style N3 fill:#4a9eff,stroke:#333,stroke-width:2px,color:#fff
+    style CMD fill:#F0F0F0,stroke:#333,stroke-width:2px
+    style NO_WG fill:#FFB6C1,stroke:#333,stroke-width:2px
+    style YES_WG fill:#90EE90,stroke:#333,stroke-width:2px
