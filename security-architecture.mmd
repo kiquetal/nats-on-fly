@@ -1,0 +1,59 @@
+graph TB
+    subgraph "Current State - No Authentication"
+        C1[Any Client]
+        C2[Quarkus App]
+        C3[F# App]
+        C4[WireGuard Client]
+        
+        N1[NATS Server<br/>No Auth<br/>Open Access]
+        
+        C1 -->|"nats://server.internal:4222"| N1
+        C2 -->|"nats://server.internal:4222"| N1
+        C3 -->|"nats://server.internal:4222"| N1
+        C4 -->|"nats://server.internal:4222"| N1
+        
+        style N1 fill:#ff6b6b,stroke:#c92a2a,color:#fff
+        style C1 fill:#ffd43b,stroke:#fab005
+    end
+    
+    subgraph "Recommended State - With Authentication"
+        A1[Unauthorized Client<br/>❌ Rejected]
+        A2[Quarkus App<br/>Token: quarkus_token]
+        A3[F# App<br/>Token: fsharp_token]
+        A4[WireGuard Admin<br/>Token: admin_token]
+        
+        N2[NATS Server<br/>✓ Token Auth<br/>✓ Permissions<br/>✓ Resource Limits]
+        
+        A1 -.->|"Connection Denied"| N2
+        A2 -->|"nats://token@server.internal:4222<br/>Publish: orders.*, events.quarkus.*"| N2
+        A3 -->|"nats://token@server.internal:4222<br/>Publish: events.fsharp.*, notifications.*"| N2
+        A4 -->|"nats://admin@server.internal:4222<br/>System Account Access"| N2
+        
+        N2 -->|Monitoring| M[Metrics Dashboard<br/>:8222]
+        
+        style N2 fill:#51cf66,stroke:#2f9e44,color:#fff
+        style A1 fill:#ff6b6b,stroke:#c92a2a,color:#fff
+        style A2 fill:#74c0fc,stroke:#1971c2
+        style A3 fill:#b197fc,stroke:#7950f2
+        style A4 fill:#ffd43b,stroke:#fab005
+        style M fill:#868e96,stroke:#495057,color:#fff
+    end
+    
+    subgraph "Security Layers"
+        L1[1. Network Isolation<br/>Fly.io 6PN Private Network]
+        L2[2. Authentication<br/>Token or User/Password]
+        L3[3. Authorization<br/>Subject-Level Permissions]
+        L4[4. Resource Limits<br/>Connections, Payload, Memory]
+        L5[5. TLS Optional<br/>Encrypted Communication]
+        
+        L1 --> L2
+        L2 --> L3
+        L3 --> L4
+        L4 --> L5
+        
+        style L1 fill:#e7f5ff,stroke:#1971c2
+        style L2 fill:#d0ebff,stroke:#1971c2
+        style L3 fill:#a5d8ff,stroke:#1971c2
+        style L4 fill:#74c0fc,stroke:#1971c2
+        style L5 fill:#4dabf7,stroke:#1971c2
+    end
