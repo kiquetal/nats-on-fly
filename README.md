@@ -43,3 +43,111 @@ This diagram illustrates how NATS server operates within Fly.io's infrastructure
 - Use connection pooling in your applications
 - Configure appropriate timeouts and reconnection strategies
 - Monitor NATS metrics for throughput and connection health
+
+## Local Development with WireGuard
+
+![WireGuard Flow](./wireguard-flow.png)
+
+See [wireguard-flow.mmd](./wireguard-flow.mmd) for the diagram source.
+
+### Why Use WireGuard?
+
+WireGuard allows you to connect your local development machine directly to Fly.io's private 6PN network, enabling you to:
+
+- **Access `.internal` DNS from localhost** - Connect to `nats://nats.internal:4222` as if your machine was running on Fly.io
+- **Avoid public endpoints** - No need to expose NATS publicly or incur egress costs during development
+- **Test production-like setup** - Use the same connection strings locally as your deployed apps
+- **Secure connection** - Encrypted tunnel to your Fly.io organization's private network
+
+### Setting Up WireGuard
+
+1. **Create WireGuard configuration:**
+   ```bash
+   fly wireguard create
+   ```
+   This generates a WireGuard config file (e.g., `laptop-asuncion.conf`)
+
+2. **Connect to the tunnel:**
+   ```bash
+   sudo wg-quick up laptop-asuncion
+   ```
+
+3. **Disconnect from the tunnel:**
+   ```bash
+   sudo wg-quick down laptop-asuncion
+   ```
+
+4. **Fix MTU issues (if experiencing connection drops):**
+   ```bash
+   sudo ip link set dev laptop-asuncion mtu 1280
+   ```
+
+### DNS Configuration
+
+**You need to update `/etc/hosts` for internal DNS resolution:**
+
+To access `.internal` domains from your local machine, add an entry to `/etc/hosts` pointing the internal hostname to its IPv6 address:
+
+```
+<IPv6_ADDRESS> nats-server-summer-tree-8296.internal
+```
+
+**Finding the IPv6 address:**
+
+1. **Verify WireGuard interface:**
+   ```bash
+   ip addr show laptop-asuncion
+   ```
+
+2. **Test connectivity to Fly DNS:**
+   ```bash
+   ping6 fdaa::3
+   ```
+
+3. **Resolve internal hostname:**
+   ```bash
+   dig @fdaa::3 nats-server-summer-tree-8296.internal AAAA
+   ```
+
+4. **Test NATS port accessibility:**
+   ```bash
+   nc -zv nats-server-summer-tree-8296.internal 4222
+   ```
+
+### Connecting from Localhost
+
+Once WireGuard is active and `/etc/hosts` is configured, use the internal connection string:
+
+```bash
+# Connect using the internal hostname
+nats://nats-server-summer-tree-8296.internal:4222
+```
+
+### Verify NATS Installation
+
+1. **Check server information:**
+   ```bash
+   nats server info -s nats-server-summer-tree-8296.internal:4222
+   ```
+
+2. **Test messaging (Pub/Sub):**
+   
+   Subscribe to a test subject:
+   ```bash
+   nats sub -s nats-server-summer-tree-8296.internal:4222 test.subject
+   ```
+   
+   Publish a message (in another terminal):
+   ```bash
+   nats pub -s nats-server-summer-tree-8296.internal:4222 test.subject "Hello NATS"
+   ```
+
+3. **Check round-trip time:**
+   ```bash
+   nats rtt -s nats-server-summer-tree-8296.internal:4222
+   ```
+
+**Benefits:**
+- No code changes between local and production
+- Test with production-like latency and networking
+- Access all internal services in your Fly.io organization
