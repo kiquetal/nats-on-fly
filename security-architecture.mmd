@@ -1,5 +1,5 @@
-graph TB
-    subgraph "Current State - No Authentication"
+graph TD
+    subgraph Current["Current State - No Authentication"]
         C1[Any Client]
         C2[Quarkus App]
         C3[F# App]
@@ -16,7 +16,9 @@ graph TB
         style C1 fill:#ffd43b,stroke:#fab005
     end
     
-    subgraph "Recommended State - With Authentication"
+    Current --> Recommended
+    
+    subgraph Recommended["Recommended State - With Authentication"]
         A1[Unauthorized Client<br/>❌ Rejected]
         A2[Quarkus App<br/>Token: quarkus_token]
         A3[F# App<br/>Token: fsharp_token]
@@ -39,7 +41,9 @@ graph TB
         style M fill:#868e96,stroke:#495057,color:#fff
     end
     
-    subgraph "Security Layers"
+    Recommended --> Security
+    
+    subgraph Security["Security Layers"]
         L1[1. Network Isolation<br/>Fly.io 6PN Private Network]
         L2[2. Authentication<br/>Token or User/Password]
         L3[3. Authorization<br/>Subject-Level Permissions]
