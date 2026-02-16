@@ -243,16 +243,134 @@ fly secrets set NATS_TOKEN=$TOKEN -a nats-server-summer-tree-8296
 
 ### Step 4: Update Application Connection Strings
 
-**Quarkus (application.properties):**
+#### Quarkus Application
+
+**application.properties:**
 ```properties
 nats.url=nats://${NATS_TOKEN}@nats-server-summer-tree-8296.internal:4222
 ```
 
-**F# (configuration):**
-```fsharp
-let natsUrl = Environment.GetEnvironmentVariable("NATS_URL")
-// nats://token@nats-server-summer-tree-8296.internal:4222
+**Set token as Fly.io secret:**
+```bash
+# Generate unique token for Quarkus app
+QUARKUS_TOKEN=$(openssl rand -base64 32)
+
+# Set as secret in your Quarkus app
+fly secrets set NATS_TOKEN=$QUARKUS_TOKEN -a your-quarkus-app-name
 ```
+
+**Java connection code:**
+```java
+import io.nats.client.Connection;
+import io.nats.client.Nats;
+import io.nats.client.Options;
+
+String natsUrl = System.getenv("NATS_URL");
+// or construct: "nats://" + System.getenv("NATS_TOKEN") + "@nats-server-summer-tree-8296.internal:4222"
+
+Options options = new Options.Builder()
+    .server(natsUrl)
+    .build();
+
+Connection nc = Nats.connect(options);
+```
+
+#### F# Application
+
+**Configuration:**
+```fsharp
+open System
+open NATS.Client
+
+let natsUrl = Environment.GetEnvironmentVariable("NATS_URL")
+// Format: nats://token@nats-server-summer-tree-8296.internal:4222
+
+let options = ConnectionFactory.GetDefaultOptions()
+options.Url <- natsUrl
+
+let connection = new ConnectionFactory().CreateConnection(options)
+```
+
+**Set token as Fly.io secret:**
+```bash
+# Generate unique token for F# app
+FSHARP_TOKEN=$(openssl rand -base64 32)
+
+# Set as secret in your F# app
+fly secrets set NATS_URL="nats://${FSHARP_TOKEN}@nats-server-summer-tree-8296.internal:4222" -a your-fsharp-app-name
+```
+
+#### WireGuard Admin Access (Local Development)
+
+**For local development and admin tasks via WireGuard:**
+
+```bash
+# Generate admin token
+ADMIN_TOKEN=$(openssl rand -base64 32)
+
+# Store in your local environment
+echo "export NATS_ADMIN_URL=\"nats://${ADMIN_TOKEN}@nats-server-summer-tree-8296.internal:4222\"" >> ~/.bashrc
+source ~/.bashrc
+
+# Use for admin commands
+nats server info -s $NATS_ADMIN_URL
+nats pub -s $NATS_ADMIN_URL test.subject "Hello"
+nats sub -s $NATS_ADMIN_URL test.subject
+```
+
+**Update NATS server configuration with all tokens:**
+
+```conf
+# nats-server.conf
+authorization {
+  users = [
+    {
+      user: "quarkus_app"
+      password: "$QUARKUS_TOKEN"
+      permissions: {
+        publish: ["orders.>", "events.quarkus.>"]
+        subscribe: ["orders.>", "notifications.>"]
+      }
+    }
+    {
+      user: "fsharp_app"
+      password: "$FSHARP_TOKEN"
+      permissions: {
+        publish: ["events.fsharp.>", "notifications.>"]
+        subscribe: ["orders.>", "events.>"]
+      }
+    }
+    {
+      user: "admin"
+      password: "$ADMIN_TOKEN"
+      permissions: {
+        publish: ">"
+        subscribe: ">"
+      }
+    }
+  ]
+}
+
+jetstream {
+  store_dir: "/data"
+}
+
+http_port: 8222
+```
+
+**Set all tokens in NATS server:**
+```bash
+fly secrets set \
+  QUARKUS_TOKEN="<quarkus-token-value>" \
+  FSHARP_TOKEN="<fsharp-token-value>" \
+  ADMIN_TOKEN="<admin-token-value>" \
+  -a nats-server-summer-tree-8296
+```
+
+**Connection strings for each app:**
+- Quarkus: `nats://quarkus_app:$QUARKUS_TOKEN@nats-server-summer-tree-8296.internal:4222`
+- F#: `nats://fsharp_app:$FSHARP_TOKEN@nats-server-summer-tree-8296.internal:4222`
+- Admin: `nats://admin:$ADMIN_TOKEN@nats-server-summer-tree-8296.internal:4222`
 
 ### Step 5: Deploy and Test
 
