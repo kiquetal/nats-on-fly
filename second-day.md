@@ -34,6 +34,10 @@ Add to your NATS configuration file:
 
 ```conf
 # nats-server.conf
+# Bind to all IPv6 addresses
+host: "::"
+port: 4222
+
 authorization {
   token: "$NATS_TOKEN"
 }
@@ -61,6 +65,10 @@ fly secrets set NATS_TOKEN=your-secure-random-token -a nats-server-summer-tree-8
 
 ```conf
 # nats-server.conf
+# Listen on all IPv6 addresses
+host: "::"
+port: 4222
+
 authorization {
   users = [
     {
@@ -82,6 +90,7 @@ jetstream {
   store_dir: "/data"
 }
 
+# Monitoring - bind to all IPv6 addresses
 http_port: 8222
 ```
 
@@ -96,6 +105,10 @@ nats://app_user:password@nats-server-summer-tree-8296.internal:4222
 
 ```conf
 # nats-server.conf
+# Listen on all IPv6 addresses
+host: "::"
+port: 4222
+
 accounts {
   SYS: {
     users: [
@@ -116,6 +129,7 @@ jetstream {
   store_dir: "/data"
 }
 
+# Monitoring - bind to all IPv6 addresses
 http_port: 8222
 ```
 
@@ -132,6 +146,10 @@ nats server info -s nats://admin:password@nats-server-summer-tree-8296.internal:
 
 ```conf
 # nats-server.conf
+# Listen on all IPv6 addresses
+host: "::"
+port: 4222
+
 tls {
   cert_file: "/certs/server-cert.pem"
   key_file: "/certs/server-key.pem"
@@ -147,6 +165,7 @@ jetstream {
   store_dir: "/data"
 }
 
+# Monitoring - bind to all IPv6 addresses
 http_port: 8222
 ```
 
@@ -161,6 +180,10 @@ nats://token@nats-server-summer-tree-8296.internal:4222?tls=true
 
 ```conf
 # nats-server.conf
+# Listen on all IPv6 addresses
+host: "::"
+port: 4222
+
 authorization {
   users = [
     {
@@ -186,6 +209,7 @@ jetstream {
   store_dir: "/data"
 }
 
+# Monitoring - bind to all IPv6 addresses
 http_port: 8222
 ```
 
@@ -195,6 +219,10 @@ http_port: 8222
 
 ```conf
 # nats-server.conf
+# Listen on all IPv6 addresses
+host: "::"
+port: 4222
+
 max_connections: 100
 max_payload: 1048576  # 1MB
 max_pending: 67108864  # 64MB
@@ -209,6 +237,7 @@ jetstream {
   max_file_store: 10737418240   # 10GB
 }
 
+# Monitoring - bind to all IPv6 addresses
 http_port: 8222
 ```
 
@@ -225,11 +254,19 @@ Create `nats-server.conf` with your chosen security settings (start with token a
 CMD ["-js", "-sd", "/data", "-m", "8222", "-a", "::"]
 ```
 
+**Explanation of current flags:**
+- `-js` - Enable JetStream
+- `-sd /data` - JetStream store directory
+- `-m 8222` - Enable monitoring on port 8222
+- `-a ::` - Bind to all IPv6 addresses (equivalent to `host: "::"` in config)
+
 **Updated command:**
 ```dockerfile
 COPY nats-server.conf /etc/nats/nats-server.conf
 CMD ["-c", "/etc/nats/nats-server.conf"]
 ```
+
+**Note:** The `host: "::"` in the configuration file replaces the `-a ::` flag, and `http_port: 8222` replaces the `-m 8222` flag. The monitoring endpoint will automatically bind to the same host address as the client port.
 
 ### Step 3: Set Secrets in Fly.io
 
@@ -322,6 +359,10 @@ nats sub -s $NATS_ADMIN_URL test.subject
 
 ```conf
 # nats-server.conf
+# Listen on all IPv6 addresses
+host: "::"
+port: 4222
+
 authorization {
   users = [
     {
@@ -355,6 +396,7 @@ jetstream {
   store_dir: "/data"
 }
 
+# Monitoring - bind to all IPv6 addresses
 http_port: 8222
 ```
 
