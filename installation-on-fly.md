@@ -274,6 +274,95 @@ sudo wg-quick down laptop-asuncion
 - ✓ No need to expose NATS publicly during development
 - ✓ Zero egress costs for testing
 
+## Why WireGuard Tests Succeed
+
+### Network Flow Explanation
+
+```
+┌──────────────┐    WireGuard     ┌─────────────┐    6PN Network    ┌──────────────┐
+│              │    Encrypted     │             │    Private IPv6   │              │
+│  localhost   │─────────────────▶│  Tunnel     │──────────────────▶│  NATS Server │
+│              │    IPv6 Tunnel   │  Interface  │    Direct Route   │  :4222       │
+└──────────────┘                  └─────────────┘                   └──────────────┘
+     Your IP:                          Assigned:                         Server IP:
+     (public)                    fdaa:7:37bb:a7b:                  fdaa:7:37bb:a7b:
+                                 60a:0:a:202                       5c5:a730:c7da:2
+```
+
+### 1. WireGuard Creates Virtual Presence
+
+When you run `wg-quick up`, your machine:
+- Gets assigned an IPv6 address in Fly.io's private range (`fdaa::/16`)
+- Becomes a virtual peer in Fly.io's 6PN network
+- Can route traffic directly to any `.internal` hostname
+
+**Your machine is now treated as if it's running inside Fly.io's infrastructure.**
+
+### 2. DNS Resolution Path
+
+```bash
+dig @fdaa:7:37bb::3 nats-server-summer-tree-8296.internal AAAA
+# Returns: fdaa:7:37bb:a7b:5c5:a730:c7da:2
+```
+
+- Query goes to Fly.io's internal DNS server (`fdaa:7:37bb::3`)
+- DNS server resolves `.internal` hostname to private IPv6
+- `/etc/hosts` maps this to a friendly name for your system
+
+### 3. Direct IPv6 Connection
+
+```
+localhost → WireGuard tunnel → Fly.io 6PN → NATS IPv6:4222
+```
+
+**Why this works:**
+- No NAT traversal needed (pure IPv6)
+- No public internet routing (stays in Fly.io's network)
+- Direct peer-to-peer connection within 6PN
+- Same path as Fly.io app-to-app communication
+
+### 4. NATS Protocol Success
+
+**TCP Connection (port 4222):**
+```bash
+nc -zv nats-server-summer-tree-8296.internal 4222
+# Connection succeeded!
+```
+- Port 4222 is open and listening
+- Raw TCP connection established (no HTTP layer)
+- NATS binary protocol handshake completes
+
+**Pub/Sub Messaging:**
+```bash
+nats pub -s nats-server-summer-tree-8296.internal:4222 test.subject "Hello"
+# Published 25 bytes to "test.subject"
+```
+- NATS client connects using native protocol
+- No authentication required (default config)
+- Messages flow bidirectionally
+
+### 5. Why Some Commands Fail
+
+**`nats server info` fails:**
+- Requires system-level authentication
+- Accesses monitoring/admin endpoints
+- Not related to connectivity
+
+**Pub/Sub succeeds:**
+- Core NATS messaging functionality
+- No auth configured in your `fly.toml`
+- Proves the connection works end-to-end
+
+### Key Insight
+
+From the NATS server's perspective, your localhost connection is **indistinguishable** from a connection from another Fly.io app. Both use:
+- Same `.internal` DNS resolution
+- Same private IPv6 network (6PN)
+- Same direct routing (no public internet)
+- Same connection string format
+
+**WireGuard makes your development machine a first-class citizen in Fly.io's private network.**
+
 ## Quick Start Commands
 
 ```bash
