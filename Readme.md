@@ -18,6 +18,41 @@ fly launch --image nats:2.10-alpine --no-deploy
 
 Follow the prompts to set your app name and region.
 
+## 1.5. Using the Dockerfile
+
+Instead of using a raw image, this project includes a `Dockerfile` to provide a consistent environment and default configuration.
+
+### Dockerfile Breakdown
+
+```dockerfile
+FROM nats:2.10.25-alpine
+
+# Expose client, management, and routing ports
+EXPOSE 4222 8222 6222
+
+# Default entrypoint is already "nats-server"
+CMD ["-js", "-sd", "/data", "-m", "8222"]
+```
+
+**Parameters Explained:**
+
+*   **`FROM nats:2.10.25-alpine`**: Uses the official NATS image based on Alpine Linux for a lightweight container.
+*   **`EXPOSE 4222 8222 6222`**: Documents the ports used by NATS:
+    *   `4222`: Main port for client connections.
+    *   `8222`: HTTP monitoring and management API.
+    *   `6222`: Cluster routing for inter-node communication.
+*   **`CMD ["-js", "-sd", "/data", "-m", "8222"]`**:
+    *   `-js`: Enables **JetStream**, providing persistence, streaming, and key-value capabilities.
+    *   `-sd /data`: Specifies the **Storage Directory**. This path must correspond to the mount point of your Fly Volume.
+    *   `-m 8222`: Starts the **Monitoring** server on the specified port.
+
+To use the Dockerfile, ensure your `fly.toml` points to it:
+
+```toml
+[build]
+  dockerfile = "Dockerfile"
+```
+
 ## 2. Allocate a Dedicated IPv4 Address
 
 NATS uses non-HTTP TCP protocols (port 4222 for client connections), which requires a dedicated IPv4 address on Fly.io. Allocate one for your app:
@@ -53,7 +88,7 @@ app = "your-app-name"
 primary_region = "your-region"
 
 [build]
-  image = "nats:2.10-alpine"
+  dockerfile = "Dockerfile"
 
 # Mount the volume we created
 [mounts]
@@ -80,14 +115,18 @@ primary_region = "your-region"
     { port = 8222, handlers = ["http"] }
   ]
 
-# CMD override to enable JetStream and point to storage
-# Alternatively, you can use a distinct start command in the Dockerfile or via [processes]
+# CMD override to enable JetStream, point to storage and bind to IPv6
 [experimental]
-  cmd = ["-js", "-sd", "/data"]
+  cmd = ["-js", "-sd", "/data", "-m", "8222", "-a", "::"]
 ```
 
 *   `-js`: Enables JetStream.
 *   `-sd /data`: Sets the store directory to our mounted volume.
+*   `-m 8222`: Sets the monitoring port.
+*   `-a ::`: Binds to all addresses (including IPv6), which is important for Fly.io's 6PN networking.
+
+> [!NOTE]
+> The `cmd` in `fly.toml`'s `[experimental]` section will override the `CMD` defined in the `Dockerfile`.
 
 ## 5. Understanding the Configuration
 
