@@ -31,7 +31,7 @@ FROM nats:2.10.25-alpine
 EXPOSE 4222 8222 6222
 
 # Default entrypoint is already "nats-server"
-CMD ["-js", "-sd", "/data", "-m", "8222"]
+CMD ["-js", "-sd", "/data", "-m", "8222", "-a", "::"]
 ```
 
 **Parameters Explained:**
@@ -41,10 +41,11 @@ CMD ["-js", "-sd", "/data", "-m", "8222"]
     *   `4222`: Main port for client connections.
     *   `8222`: HTTP monitoring and management API.
     *   `6222`: Cluster routing for inter-node communication.
-*   **`CMD ["-js", "-sd", "/data", "-m", "8222"]`**:
+*   **`CMD ["-js", "-sd", "/data", "-m", "8222", "-a", "::"]`**:
     *   `-js`: Enables **JetStream**, providing persistence, streaming, and key-value capabilities.
     *   `-sd /data`: Specifies the **Storage Directory**. This path must correspond to the mount point of your Fly Volume.
     *   `-m 8222`: Starts the **Monitoring** server on the specified port.
+    *   `-a ::`: Binds to all IPv6 addresses, essential for Fly.io's 6PN private network connectivity.
 
 To use the Dockerfile, ensure your `fly.toml` points to it:
 
