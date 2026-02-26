@@ -10,6 +10,21 @@ This diagram illustrates how NATS server operates within Fly.io's infrastructure
 
 ## Important Notes
 
+### IPv6 Configuration
+
+NATS server is configured to listen on all IPv6 addresses using the `-a ::` flag, which is essential for Fly.io's 6PN private network connectivity.
+
+**fly.toml:**
+```toml
+[experimental]
+  cmd = ['-js', '-sd', '/data', '-m', '8222', '-a', '::']
+```
+
+This flag can also be added to the Dockerfile CMD for consistency:
+```dockerfile
+CMD ["-js", "-sd", "/data", "-m", "8222", "-a", "::"]
+```
+
 ### DNS Resolution Strategy
 
 **Use `.internal` DNS for internal communication:**
